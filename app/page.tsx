@@ -119,7 +119,7 @@ export default function DashboardPage() {
             <CardTitle>Request Flow Visualization</CardTitle>
           </CardHeader>
           <CardContent className="pl-2">
-            <RequestFlowDiagram status={serverData?.status || "online"} />
+            <RequestFlowDiagram status={"online"} />
           </CardContent>
         </Card>
 
