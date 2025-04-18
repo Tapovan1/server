@@ -5,7 +5,6 @@ export async function GET() {
   try {
     // Get real server metrics directly from the local system
     const serverData = await getServerMetrics();
-    console.log("Server data:", serverData);
 
     return NextResponse.json(serverData);
   } catch (error) {
