@@ -14,7 +14,7 @@ RUN npm ci --legacy-peer-deps
 # Copy all the files
 COPY . .
 
-RUN npx prisma generate
+
 
 
 # Build the Next.js app
