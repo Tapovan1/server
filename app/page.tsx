@@ -1,67 +1,67 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Clock, Cpu, HardDrive, Server, Thermometer } from "lucide-react"
+import { useEffect, useState } from "react";
+import { Clock, Cpu, HardDrive, Server, Thermometer } from "lucide-react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { RequestFlowDiagram } from "@/components/request-flow-diagram"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { RequestFlowDiagram } from "@/components/request-flow-diagram";
 
 // Define the server data type
 interface ServerData {
-  status: "online" | "warning" | "error" | "maintenance"
-  errorCode?: number
-  errorMessage?: string
+  status: "online" | "warning" | "error" | "maintenance";
+  errorCode?: number;
+  errorMessage?: string;
   uptime: {
-    percentage: number
-    duration: string
-  }
+    percentage: number;
+    duration: string;
+  };
   cpu: {
-    usage: number
-    cores: number
-    temperature: number
-  }
+    usage: number;
+    cores: number;
+    temperature: number;
+  };
   memory: {
-    usage: number
-    total: string
-    used: string
-  }
+    usage: number;
+    total: string;
+    used: string;
+  };
   temperature: {
-    value: number
-    status: "normal" | "warning" | "critical"
-  }
-  timestamp: string
+    value: number;
+    status: "normal" | "warning" | "critical";
+  };
+  timestamp: string;
 }
 
 export default function DashboardPage() {
-  const [serverData, setServerData] = useState<ServerData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [serverData, setServerData] = useState<ServerData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchServerData = async () => {
     try {
-      const response = await fetch("/api/server-status")
+      const response = await fetch("/api/server-status");
       if (!response.ok) {
-        throw new Error(`Error: ${response.status}`)
+        throw new Error(`Error: ${response.status}`);
       }
-      const data = await response.json()
-      setServerData(data)
-      setLoading(false)
+      const data = await response.json();
+      setServerData(data);
+      setLoading(false);
     } catch (err) {
-      setError("Failed to fetch server data")
-      setLoading(false)
-      console.error("Error fetching server data:", err)
+      setError("Failed to fetch server data");
+      setLoading(false);
+      console.error("Error fetching server data:", err);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchServerData()
+    fetchServerData();
 
     // Set up polling for real-time updates
-    const intervalId = setInterval(fetchServerData, 30000) // Update every 30 seconds
+    const intervalId = setInterval(fetchServerData, 30000); // Update every 30 seconds
 
-    return () => clearInterval(intervalId) // Clean up on unmount
-  }, [])
+    return () => clearInterval(intervalId); // Clean up on unmount
+  }, []);
 
   if (loading) {
     return (
@@ -71,7 +71,7 @@ export default function DashboardPage() {
           <p>Loading server data...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -80,12 +80,15 @@ export default function DashboardPage() {
         <div className="text-center text-destructive">
           <h2 className="text-xl font-bold mb-2">Error</h2>
           <p>{error}</p>
-          <button onClick={fetchServerData} className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md">
+          <button
+            onClick={fetchServerData}
+            className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md"
+          >
             Retry
           </button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -96,14 +99,18 @@ export default function DashboardPage() {
           <span>ServerMonitor</span>
         </div>
         <div className="ml-auto text-sm text-muted-foreground">
-          Last updated: {serverData ? new Date(serverData.timestamp).toLocaleTimeString() : "N/A"}
+          Last updated:{" "}
+          {serverData
+            ? new Date(serverData.timestamp).toLocaleTimeString()
+            : "N/A"}
         </div>
       </header>
       <main className="flex-1 space-y-6 p-4 md:p-8">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Server Status</h1>
           <p className="text-destructive">
-            {serverData?.errorCode} {serverData?.errorMessage} - nginx/1.24.0 (Ubuntu)
+            {serverData?.errorCode} {serverData?.errorMessage} - nginx/1.24.0
+            (Ubuntu)
           </p>
         </div>
 
@@ -112,7 +119,7 @@ export default function DashboardPage() {
             <CardTitle>Request Flow Visualization</CardTitle>
           </CardHeader>
           <CardContent className="pl-2">
-            <RequestFlowDiagram status={serverData?.status || "error"} />
+            <RequestFlowDiagram status={serverData?.status || "online"} />
           </CardContent>
         </Card>
 
@@ -123,9 +130,16 @@ export default function DashboardPage() {
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{serverData?.uptime.percentage}%</div>
-              <div className="text-xs text-muted-foreground mb-2">Duration: {serverData?.uptime.duration}</div>
-              <Progress value={serverData?.uptime.percentage} className="mt-1" />
+              <div className="text-2xl font-bold">
+                {serverData?.uptime.percentage}%
+              </div>
+              <div className="text-xs text-muted-foreground mb-2">
+                Duration: {serverData?.uptime.duration}
+              </div>
+              <Progress
+                value={serverData?.uptime.percentage}
+                className="mt-1"
+              />
             </CardContent>
           </Card>
           <Card>
@@ -135,7 +149,9 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{serverData?.cpu.usage}%</div>
-              <div className="text-xs text-muted-foreground mb-2">{serverData?.cpu.cores} Cores</div>
+              <div className="text-xs text-muted-foreground mb-2">
+                {serverData?.cpu.cores} Cores
+              </div>
               <Progress value={serverData?.cpu.usage} className="mt-1" />
             </CardContent>
           </Card>
@@ -145,7 +161,9 @@ export default function DashboardPage() {
               <HardDrive className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{serverData?.memory.usage}%</div>
+              <div className="text-2xl font-bold">
+                {serverData?.memory.usage}%
+              </div>
               <div className="text-xs text-muted-foreground mb-2">
                 {serverData?.memory.used} of {serverData?.memory.total}
               </div>
@@ -158,8 +176,12 @@ export default function DashboardPage() {
               <Thermometer className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{serverData?.temperature.value}°C</div>
-              <div className="text-xs text-muted-foreground mb-2">Status: {serverData?.temperature.status}</div>
+              <div className="text-2xl font-bold">
+                {serverData?.temperature.value}°C
+              </div>
+              <div className="text-xs text-muted-foreground mb-2">
+                Status: {serverData?.temperature.status}
+              </div>
               <Progress
                 value={((serverData?.temperature.value || 0) / 100) * 100}
                 className="mt-1"
@@ -167,8 +189,8 @@ export default function DashboardPage() {
                   serverData?.temperature.status === "critical"
                     ? "red"
                     : serverData?.temperature.status === "warning"
-                      ? "yellow"
-                      : "green"
+                    ? "yellow"
+                    : "green"
                 }
               />
             </CardContent>
@@ -176,5 +198,5 @@ export default function DashboardPage() {
         </div>
       </main>
     </div>
-  )
+  );
 }

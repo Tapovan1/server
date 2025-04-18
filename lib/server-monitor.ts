@@ -45,41 +45,45 @@ export async function getServerMetrics() {
     );
 
     // Get temperature (Linux-specific, may not work on all systems)
-
     let tempValue = 0;
     let tempStatus = "normal";
 
     try {
-      // Try to get CPU temperature specifically
+      // Try different temperature sources
+      let tempOutput;
       try {
-        // Method 1: Try to get Package id 0 temperature (most accurate for CPU)
-        const { stdout } = await execAsync(
-          "sensors | grep 'Package id 0' | awk '{print $4}' | sed 's/°C//' | sed 's/+//'"
+        tempOutput = await readFile(
+          "/sys/class/thermal/thermal_zone0/temp",
+          "utf8"
         );
-        tempValue = parseFloat(stdout.trim());
+        //another tempraor fetch
       } catch {
         try {
-          // Method 2: Try to get Core 0 temperature
           const { stdout } = await execAsync(
-            "sensors | grep 'Core 0' | head -n 1 | awk '{print $3}' | sed 's/°C//' | sed 's/+//'"
+            "sensors | grep 'Core 0' | awk '{print $3}' | sed 's/°C//' | sed 's/+//'"
           );
-          tempValue = parseFloat(stdout.trim());
-        } catch {
-          try {
-            // Method 3: Try to get NVMe temperature
-            const { stdout } = await execAsync(
-              "sensors | grep 'Composite' | head -n 1 | awk '{print $2}' | sed 's/°C//' | sed 's/+//'"
-            );
-            tempValue = parseFloat(stdout.trim());
-          } catch {
-            // Method 4: Try gigabyte_wmi temperature
-            const { stdout } = await execAsync(
-              "sensors | grep 'temp1' | head -n 1 | awk '{print $2}' | sed 's/°C//' | sed 's/+//'"
-            );
-            tempValue = parseFloat(stdout.trim());
+
+          // Parse the output to get the temperature value
+          tempOutput = stdout.split(":")[1].trim().split(" ")[0];
+          // Convert to number and remove any non-numeric characters
+          tempOutput = tempOutput.replace(/[^0-9.-]+/g, "");
+          // Convert to number
+          tempOutput = Number.parseFloat(tempOutput);
+          // Check if the output is a valid number
+          if (isNaN(tempOutput)) {
+            throw new Error("Invalid temperature output");
           }
+          // Convert to Celsius
+
+          tempOutput = stdout;
+        } catch {
+          tempOutput = "0";
         }
       }
+
+      // Parse temperature value
+      tempValue =
+        Number.parseInt(tempOutput.trim()) / (tempOutput.length > 2 ? 1000 : 1);
 
       if (tempValue > 80) {
         tempStatus = "critical";
@@ -96,8 +100,7 @@ export async function getServerMetrics() {
     let errorMessage;
 
     try {
-      await execAsync("systemctl status nginx");
-      console.log("nginx is running");
+      await execAsync("systemctl is-active --quiet nginx");
     } catch (error) {
       serverStatus = "error";
       errorCode = 502;
@@ -106,8 +109,6 @@ export async function getServerMetrics() {
       try {
         // Try to get more specific error information
         const { stdout } = await execAsync("systemctl status nginx --no-pager");
-        console.log("nginx status output:", stdout);
-
         if (stdout.includes("Failed to start")) {
           errorMessage = "Failed to start nginx service";
         }
